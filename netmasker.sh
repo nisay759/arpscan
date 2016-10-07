@@ -1,48 +1,68 @@
 #!/bin/bash
 
-export PATH="/usr/bin"
-
-#check if the script is run as root
-if [[ $EUID -ne 0 ]]; then
-    echo "This script must be run as root" 1>&2
-    exit 1
-fi
-
-#functions definition
 function usage {
-    echo "Usage: $0 <device>"
-    echo 
-    echo "Simple script for arp scanning the network you are currently connected to."
-    echo "Bugs & questions: nisay@minet.net"
-
+    echo "Usage: $0 <network>"
     exit 1
 }
 
-function noNetwork {
-    echo "The specified device doesn't seem to be connected to any network !"
-    exit 1
-}
-
-function scanARP() {
-    arping -I $1 $2 -c 1 -q && echo $2
-}
-
-#User input validation
 [ $# -ne 1 ] && usage
 
-dev=$1
+Ad=$(echo $1 | cut -d'.' -f1)
+Bd=$(echo $1 | cut -d'.' -f2)
+Cd=$(echo $1 | cut -d'.' -f3)
+Dd=$(echo $1 | cut -d'.' -f4 | cut -d '/' -f1)
+CIDR=$(echo $1 | cut -d'.' -f4 | cut -d '/' -f2)
 
-ip=$(ip a show dev $dev | grep -Eo 'inet .* brd' | cut -f2 -d' ') 
+Ab=$(echo "obase=2;$Ad" | bc)
+Bb=$(echo "obase=2;$Bd" | bc)
+Cb=$(echo "obase=2;$Cd" | bc)
+Db=$(echo "obase=2;$Dd" | bc)
 
-[[ -z $ip ]] && exit 1 
+netmask=""
 
-NETMASK=$(echo $ip | cut -d'.' -f4 | cut -d'/' -f2)
-
-[[ -z $NETMASK ]] && noNetwork
-
-for i in $(./netmasker.sh $ip | tail -n +2 | head -n -1); do
-    scanARP $dev $i &
+for i in $(seq 1 $CIDR);do
+    netmask=$netmask"1"
+    [ $(($i%8)) -eq 0 ] && [ $i -ne 32 ] && netmask=$netmask"."
 done
 
-wait
-exit 0
+for i in $(seq $(($CIDR+1)) 32);do
+    netmask=$netmask"0"
+    [ $(($i%8)) -eq 0 ] && [ $i -ne 32 ]  && netmask=$netmask"."
+done
+
+mskAb=$(echo $netmask | cut -d'.' -f1)
+mskBb=$(echo $netmask | cut -d'.' -f2)
+mskCb=$(echo $netmask | cut -d'.' -f3)
+mskDb=$(echo $netmask | cut -d'.' -f4 | cut -d '/' -f1)
+
+mskAd=$((2#$mskAb))
+mskBd=$((2#$mskBb))
+mskCd=$((2#$mskCb))
+mskDd=$((2#$mskDb))
+
+netAd=$(($Ad & $mskAd))
+netBd=$(($Bd & $mskBd))
+netCd=$(($Cd & $mskCd))
+netDd=$(($Dd & $mskDd))
+
+network="$netAd.$netBd.$netCd.$netDd"
+
+imskAd=$(($mskAd ^ 255))
+imskBd=$(($mskBd ^ 255))
+imskCd=$(($mskCd ^ 255))
+imskDd=$(($mskDd ^ 255))
+
+brdAd=$((netAd | imskAd))
+brdBd=$((netBd | imskBd))
+brdCd=$((netCd | imskCd))
+brdDd=$((netDd | imskDd))
+
+for i in $(seq $netAd $brdAd);do
+    for j in $(seq $netBd $brdBd);do
+        for k in $(seq $netCd $brdCd);do
+            for l in $(seq $netDd $brdDd);do
+                echo $i.$j.$k.$l
+            done
+        done
+    done
+done
