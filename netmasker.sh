@@ -13,11 +13,6 @@ Cd=$(echo $1 | cut -d'.' -f3)
 Dd=$(echo $1 | cut -d'.' -f4 | cut -d '/' -f1)
 CIDR=$(echo $1 | cut -d'.' -f4 | cut -d '/' -f2)
 
-Ab=$(echo "obase=2;$Ad" | bc)
-Bb=$(echo "obase=2;$Bd" | bc)
-Cb=$(echo "obase=2;$Cd" | bc)
-Db=$(echo "obase=2;$Dd" | bc)
-
 netmask=""
 
 for i in $(seq 1 $CIDR);do
@@ -44,8 +39,6 @@ netAd=$(($Ad & $mskAd))
 netBd=$(($Bd & $mskBd))
 netCd=$(($Cd & $mskCd))
 netDd=$(($Dd & $mskDd))
-
-network="$netAd.$netBd.$netCd.$netDd"
 
 imskAd=$(($mskAd ^ 255))
 imskBd=$(($mskBd ^ 255))
