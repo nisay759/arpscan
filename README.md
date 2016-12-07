@@ -1,5 +1,5 @@
 # arpscan
-Simple bash script to perform ARP scan on the local network (The one you are currently connected to). Very handy when level 3 scanning techniques fail due to filtering.
+Simple bash script to perform ARP scan on the local network (The one you are currently connected to). Very handy when level 3 (or higher) scanning techniques fail due to filtering.
 
 ##Usage
     sudo ./arpscan.sh <device>
