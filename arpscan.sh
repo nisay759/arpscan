@@ -24,7 +24,7 @@ function noNetwork {
 }
 
 function scanARP() {
-    arping -I $1 $2 -c 1 -q && echo $2
+    arping -I $1 $2 -c 1 | grep 'Unicast reply' | cut -d' ' -f4,5
 }
 
 #User input validation
