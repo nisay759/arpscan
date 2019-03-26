@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export PATH="/usr/bin"
+export PATH="/usr/bin:/bin:/sbin"
 
 #check if the script is run as root
 if [[ $EUID -ne 0 ]]; then
